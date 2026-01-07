@@ -1,0 +1,9 @@
+dagster==1.12.8
+dagster-cloud==1.12.8
+dagster-graphql==1.12.8
+dagster-webserver==1.12.8
+dagster-dbt==0.28.8
+dagster-sling==0.28.8
+dagster-postgres==0.28.8
+pandas
+paramiko

@@ -1,14 +1,20 @@
 services:
   sftp:
     image: atmoz/sftp:alpine
+    container_name: sftp
+    restart: always
     volumes:
       - ./upload:/home/admin/upload
     ports:
       - "${SFTP_PORT}:22"
     command: ${SFTP_USER}:${SFTP_PASS}:1001
+    networks:
+      - internal-simulation
 
   db:
     image: postgres:alpine
+    container_name: db
+    restart: always
     environment:
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
@@ -18,3 +24,83 @@ services:
       - ./postgres_data/init.sql:/docker-entrypoint-initdb.d/init_schemas.sql
     ports:
       - "${POSTGRES_PORT}:5432"
+    networks:
+      - internal-simulation
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 8s
+      retries: 5
+
+  worker:
+    build:
+      context: .
+      dockerfile: ./dagster/Dockerfile.worker
+    image: dagster/worker
+    container_name: worker
+    restart: always
+    env_file:
+      - ./.env
+    volumes:
+      # - ./profiles.yml:/opt/dagster/app/dbt/profiles.yml
+      - ./dagster/worker:/opt/dagster/app
+    networks:
+      - internal-simulation
+
+  webserver:
+    build:
+      context: .
+      dockerfile: ./dagster/Dockerfile.daemon
+    image: dagster/webserver
+    container_name: webserver
+    restart: always
+    entrypoint:
+      - dagster-webserver
+      - -h
+      - "0.0.0.0"
+      - -p
+      - "${DAGSTER_PORT}"
+      - -w
+      - workspace.yaml
+    ports:
+      - "${DAGSTER_PORT}:3000"
+    env_file:
+      - ./.env
+    volumes: 
+      - ./dagster/dagster.yaml:/opt/dagster/dagster_home/dagster.yaml
+      - ./dagster/workspace.yaml:/opt/dagster/dagster_home/workspace.yaml
+    networks:
+      - internal-simulation
+    depends_on:
+      db:
+        condition: service_healthy
+      worker:
+        condition: service_started
+
+  daemon:
+    build:
+      context: .
+      dockerfile: ./dagster/Dockerfile.daemon
+    image: dagster/daemon
+    container_name: daemon
+    restart: always
+    entrypoint:
+      - dagster-daemon
+      - run
+    env_file:
+      - ./.env
+    volumes:
+      - ./dagster/dagster.yaml:/opt/dagster/dagster_home/dagster.yaml
+      - ./dagster/workspace.yaml:/opt/dagster/dagster_home/workspace.yaml
+    networks:
+      - internal-simulation
+    depends_on:
+      db:
+        condition: service_healthy
+      worker:
+        condition: service_started
+
+networks:
+  internal-simulation:
+    name: simulation
+    driver: bridge
