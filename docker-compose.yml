@@ -3,8 +3,10 @@ services:
     image: atmoz/sftp:alpine
     container_name: sftp
     restart: always
+    environment:
+      TZ: Asia/Jakarta
     volumes:
-      - ./upload:/home/admin/upload
+      - ./upload:/home/sftpuser/upload
     ports:
       - "${SFTP_PORT}:22"
     command: ${SFTP_USER}:${SFTP_PASS}:1001
@@ -16,6 +18,7 @@ services:
     container_name: db
     restart: always
     environment:
+      TZ: Asia/Jakarta
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       POSTGRES_DB: ${POSTGRES_DB}
@@ -39,6 +42,8 @@ services:
     image: dagster/worker
     container_name: worker
     restart: always
+    environment:
+      TZ: Asia/Jakarta
     env_file:
       - ./.env
     volumes:
@@ -54,6 +59,8 @@ services:
     image: dagster/webserver
     container_name: webserver
     restart: always
+    environment:
+      TZ: Asia/Jakarta
     entrypoint:
       - dagster-webserver
       - -h
@@ -84,6 +91,8 @@ services:
     image: dagster/daemon
     container_name: daemon
     restart: always
+    environment:
+      TZ: Asia/Jakarta
     entrypoint:
       - dagster-daemon
       - run
