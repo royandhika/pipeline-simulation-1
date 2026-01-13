@@ -42,7 +42,7 @@ run_monitoring:
   poll_interval_seconds: 60
 
 run_retries:
-  enabled: true
+  enabled: false
   max_retries: 2
   retry_on_asset_or_op_failure: true
 
