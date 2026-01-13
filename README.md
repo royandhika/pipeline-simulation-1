@@ -15,7 +15,7 @@ This project simulates a data ingestion and storage environment using docker com
 *   **Components:** 
     *   `webserver`: The UI for managing runs and assets (Port `3000`).
     *   `daemon`: Handles scheduling and sensors.
-    *   `worker`: Executes the actual data pipeline code.
+    *   `worker`: Executes the actual data pipeline code and resource management.
 *   **Configuration:** Persistent storage is handled in PostgreSQL.
 
 ### 3. Storage System: PostgreSQL (`postgres:alpine`)
@@ -23,6 +23,24 @@ This project simulates a data ingestion and storage environment using docker com
 *   **Persistence:** Data is stored in `./postgres_data/warehouse`.
 *   **Initialization:** Automatically creates schemas defined in `./postgres_data/init.sql`.
 *   **Access:** Port `5433`.
+
+## Pipeline Implementation
+
+### Resources
+The project implements custom Dagster resources in `dagster/worker/resources.py`:
+*   **SFTPResource:** Manages connections to the SFTP server using `paramiko` context managers. Includes a helper `read_csv` to load files directly into Pandas DataFrames.
+*   **PostgreResource:** manages PostgreSQL connections via SQLAlchemy. Includes a `write_table` helper that handles:
+    *   DataFrame insertion (`to_sql`).
+    *   Automatic `_timestamp` generation (using server local time `pd.Timestamp.now()`).
+    *   Target schema selection (default: `raw`).
+
+### Assets
+Defined in `dagster/worker/definitions.py`:
+*   **`raw_data`:**
+    *   Reads a specific CSV file from SFTP.
+    *   Writes it to the `raw` schema in PostgreSQL.
+    *   Outputs execution metadata (row count, data preview) to Dagster UI.
+*   **`processed_data`:** A dummy downstream asset demonstrating dependency management.
 
 ## Database Schemas
 The database `warehouse` is initialized with the following schemas:
@@ -78,5 +96,5 @@ docker-compose up -d
 ```
 
 ## Future Roadmap
-*   **Pipeline Development:** Implement sensors to detect SFTP files and assets to ingest them into the `raw` schema.
+*   **Dynamic Ingestion:** Replace static file paths in assets with Sensors to detect new files dynamically.
 *   **Transformation Layer:** Add dbt or SQL-based transformations to move data from `raw` to `staging` and `mart`.
