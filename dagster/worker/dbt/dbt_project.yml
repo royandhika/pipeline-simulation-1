@@ -1,0 +1,30 @@
+name: 'worker'
+version: '1.0.0'
+
+profile: 'postgre'
+
+model-paths: ["models"]
+analysis-paths: ["analyses"]
+test-paths: ["tests"]
+seed-paths: ["seeds"]
+macro-paths: ["macros"]
+snapshot-paths: ["snapshots"]
+
+clean-targets:
+  - "target"
+  - "dbt_packages"
+
+models:
+  - name: processed_data
+    config:
+      materialized: incremental
+      schema: staging
+  - name: summary
+    config:
+      materialized: incremental
+      schema: mart
+
+sources:
+  - name: raw
+    tables: 
+      - name: raw_data

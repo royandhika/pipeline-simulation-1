@@ -7,3 +7,4 @@ dagster-sling==0.28.8
 dagster-postgres==0.28.8
 pandas
 paramiko
+dbt-postgres

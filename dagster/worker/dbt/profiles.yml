@@ -1,0 +1,12 @@
+postgre:
+  outputs:
+    db:
+      dbname: warehouse
+      host: db
+      pass: postgrespass
+      port: 5432
+      schema: mart
+      threads: 1
+      type: postgres
+      user: postgresuser
+  target: db
