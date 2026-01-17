@@ -2,7 +2,14 @@
 
 This project simulates a data ingestion and storage environment using docker compose. It establishes a source system (SFTP), an orchestration layer (Dagster), and a data warehouse (PostgreSQL).
 
+<img src="asset/scenario.png" alt="Scenario" width="650" />
+The scenario is we need to receive a scraping file from vendor every day at 00.00.
+We provide an SFTP in our local network to accomodate the transfer, and we connect the SFTP to our worker.  
+Then we have dagster to orchestrate the data consumption every day at 01.00 using python pandas. After the data is in out data warehouse, the dagster triggers dbt to continue processing the data, using medallion schema, and we would see the updated result by 01.30 every day on our Power BI dashboard.
+
 ## Services
+
+<img src="asset/containers.png" alt="Scenario" width="300" />
 
 ### 1. Source System: SFTP Server (`atmoz/sftp`)
 *   **Function:** Simulates an external system providing raw data files.
