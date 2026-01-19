@@ -1,0 +1,19 @@
+models:
+  - name: processed_data
+    config:
+      materialized: incremental
+      schema: staging
+  - name: summary
+    columns:
+      - name: conversation_id_str
+        data_tests:
+          - unique
+          - not_null
+    config:
+      materialized: incremental
+      schema: mart
+
+sources:
+  - name: raw
+    tables: 
+      - name: raw_data
